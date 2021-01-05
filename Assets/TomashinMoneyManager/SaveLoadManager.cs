@@ -31,13 +31,13 @@ public class SaveLoadManager : MonoBehaviour
                 break;
             case SaveLoadType.Binary:
                 BinaryFormatter bf = new BinaryFormatter();
-                Money money = new Money();
+                Save save = new Save();
                 try
                 {
                     using (FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                     {
-                        money.value = value;
-                        bf.Serialize(fs, money);
+                        save.value = value;
+                        bf.Serialize(fs, save);
                     }
                 }
                 catch (Exception ioEx)
@@ -68,13 +68,13 @@ public class SaveLoadManager : MonoBehaviour
                 break;
             case SaveLoadType.Binary:
                 BinaryFormatter bf = new BinaryFormatter();
-                Money money;
+                Save save;
                 try
                 {
                     using (FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                     {
-                        money = (Money)bf.Deserialize(fs);
-                        value = money.value;
+                        save = (Save)bf.Deserialize(fs);
+                        value = save.value;
                     }
                 }
                 catch (Exception ioEx)
@@ -100,4 +100,10 @@ public enum SaveLoadType
     Text,
     Binary,
     Database
+}
+
+[Serializable]
+public class Save
+{
+    public int value;
 }
