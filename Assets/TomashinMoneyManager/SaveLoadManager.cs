@@ -4,7 +4,6 @@ using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System;
-using UnityEngine.Networking;
 
 public class SaveLoadManager : MonoBehaviour
 {
@@ -52,7 +51,6 @@ public class SaveLoadManager : MonoBehaviour
                 }
                 break;
             case SaveLoadType.Database:
-                StartCoroutine(UpdateProgress(field, value));
                 break;
             default:
                 break;
@@ -95,7 +93,6 @@ public class SaveLoadManager : MonoBehaviour
                 }
                 break;
             case SaveLoadType.Database:
-                StartCoroutine(LoadProgress());
                 break;
             default:
                 
@@ -104,73 +101,6 @@ public class SaveLoadManager : MonoBehaviour
         Debug.Log(string.Format("Получение {0} = {1}", field.moneyType, value));
         return value;
     }
-
-    #region Работа с сервером
-    private IEnumerator LoadProgress()
-    {
-        WWWForm form = new WWWForm();
-        form.AddField("platform", Bridge.platform);
-        form.AddField("uid", UID);
-
-        using (UnityWebRequest www = UnityWebRequest.Post(URL_LoadProgress, form))
-        {
-            yield return www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                //Debug.Log(www.error);
-            }
-            else
-            {
-                if (www.downloadHandler.text != "")
-                {
-                    SetProgress(www.downloadHandler.text);
-                }
-                else
-                {
-                    for (int i = 0; i < keys.Length; i++)
-                    {
-                        StartUpdateProgress(keys[i], PlayerPrefs.GetInt(keys[i]).ToString());
-                    }
-                }
-                yield return new WaitForSeconds(SyncTime);
-                StartCoroutine(LoadProgress());
-            }
-        }
-    }
-    private void SetProgress(string progress)
-    {
-        string[] array = progress.Split(new char[] { ';' });
-        for (int i = 0; i < array.Length; i++)
-        {
-            //Debug.LogFormat("Key {0} updated to {1}", keys[i], Convert.ToInt32(array[i]));
-            PlayerPrefs.SetInt(keys[i], Convert.ToInt32(array[i]));
-        }
-        PuzzleMatchManager.instance.livesSystem.CheckLives();
-    }
-    private IEnumerator UpdateProgress(string field, string value)
-    {
-        WWWForm form = new WWWForm();
-        form.AddField("platform", Bridge.platform);
-        form.AddField("uid", UID);
-        form.AddField("field", field);
-        form.AddField("value", value);
-
-        using (UnityWebRequest www = UnityWebRequest.Post(URL_UpdateProgress, form))
-        {
-            yield return www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                //Debug.Log(www.error);
-            }
-            else
-            {
-                //Debug.Log(www.downloadHandler.text);
-            }
-        }
-    }
-    #endregion
 }
 
 public enum SaveLoadType
