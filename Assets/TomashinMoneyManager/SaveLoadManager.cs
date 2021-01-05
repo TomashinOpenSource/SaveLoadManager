@@ -8,13 +8,20 @@ using UnityEngine.Networking;
 
 public class SaveLoadManager : MonoBehaviour
 {
+    private static SaveLoadManager localInstance;
+    public static SaveLoadManager slm { get { return localInstance; } }
+
     public static SaveLoadType SaveLoadType;
 
+    private static Save save = new Save();
+
+    private static string filePath;
     private const string fileBinaryEnd = ".save";
     private const string fileJsonEnd = ".json";
-    private static string filePath;
 
-    private static Save save = new Save();
+    private const string WebSaveProgress = "https://<адрес>/WebSaveProgress.php";
+    private const string WebLoadProgress = "https://<адрес>/WebLoadProgress.php";
+
 
     private void Start()
     {
@@ -52,7 +59,7 @@ public class SaveLoadManager : MonoBehaviour
                 }
                 break;
             case SaveLoadType.Database:
-                StartCoroutine(UpdateProgress(field, value));
+                slm.StartCoroutine(UpdateProgress(field, value));
                 break;
             default:
                 break;
@@ -95,7 +102,7 @@ public class SaveLoadManager : MonoBehaviour
                 }
                 break;
             case SaveLoadType.Database:
-                StartCoroutine(LoadProgress());
+                slm.StartCoroutine(LoadProgress());
                 break;
             default:
                 
@@ -106,13 +113,13 @@ public class SaveLoadManager : MonoBehaviour
     }
 
     #region Работа с сервером
-    private IEnumerator LoadProgress()
+    private static IEnumerator LoadProgress()
     {
         WWWForm form = new WWWForm();
-        form.AddField("platform", Bridge.platform);
-        form.AddField("uid", UID);
+        //form.AddField("platform", Bridge.platform);
+        //form.AddField("uid", UID);
 
-        using (UnityWebRequest www = UnityWebRequest.Post(URL_LoadProgress, form))
+        using (UnityWebRequest www = UnityWebRequest.Post(WebLoadProgress, form))
         {
             yield return www.SendWebRequest();
 
@@ -128,35 +135,32 @@ public class SaveLoadManager : MonoBehaviour
                 }
                 else
                 {
-                    for (int i = 0; i < keys.Length; i++)
-                    {
-                        StartUpdateProgress(keys[i], PlayerPrefs.GetInt(keys[i]).ToString());
-                    }
+                    
                 }
-                yield return new WaitForSeconds(SyncTime);
-                StartCoroutine(LoadProgress());
+                //yield return new WaitForSeconds(SyncTime);
+                slm.StartCoroutine(LoadProgress());
             }
         }
     }
-    private void SetProgress(string progress)
+    private static void SetProgress(string progress)
     {
         string[] array = progress.Split(new char[] { ';' });
         for (int i = 0; i < array.Length; i++)
         {
             //Debug.LogFormat("Key {0} updated to {1}", keys[i], Convert.ToInt32(array[i]));
-            PlayerPrefs.SetInt(keys[i], Convert.ToInt32(array[i]));
+            //PlayerPrefs.SetInt(keys[i], Convert.ToInt32(array[i]));
         }
-        PuzzleMatchManager.instance.livesSystem.CheckLives();
+        //PuzzleMatchManager.instance.livesSystem.CheckLives();
     }
-    private IEnumerator UpdateProgress(string field, string value)
+    private static IEnumerator UpdateProgress(Money field, int value)
     {
         WWWForm form = new WWWForm();
-        form.AddField("platform", Bridge.platform);
-        form.AddField("uid", UID);
-        form.AddField("field", field);
+        //form.AddField("platform", Bridge.platform);
+        //form.AddField("uid", UID);
+        form.AddField("field", field.moneyType.ToString());
         form.AddField("value", value);
 
-        using (UnityWebRequest www = UnityWebRequest.Post(URL_UpdateProgress, form))
+        using (UnityWebRequest www = UnityWebRequest.Post(WebSaveProgress, form))
         {
             yield return www.SendWebRequest();
 
