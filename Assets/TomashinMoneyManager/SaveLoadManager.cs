@@ -9,8 +9,11 @@ public class SaveLoadManager : MonoBehaviour
 {
     public static SaveLoadType SaveLoadType;
 
-    private const string fileEnd = ".save";
+    private const string fileBinaryEnd = ".save";
+    private const string fileJsonEnd = ".json";
     private static string filePath;
+
+    private static Save save = new Save();
 
     private void Start()
     {
@@ -19,7 +22,6 @@ public class SaveLoadManager : MonoBehaviour
 
     public static void SaveValue(Money field, int value)
     {
-        filePath = Application.persistentDataPath + "/" + field.moneyType.ToString() + fileEnd;
         switch (SaveLoadType)
         {
             case SaveLoadType.None:
@@ -28,10 +30,13 @@ public class SaveLoadManager : MonoBehaviour
                 PlayerPrefs.SetInt(field.moneyType.ToString(), value);
                 break;
             case SaveLoadType.Text:
+                filePath = Application.persistentDataPath + "/" + field.moneyType.ToString() + fileJsonEnd;
+                save.value = value;
+                File.WriteAllText(filePath, JsonUtility.ToJson(save));
                 break;
             case SaveLoadType.Binary:
+                filePath = Application.persistentDataPath + "/" + field.moneyType.ToString() + fileBinaryEnd;
                 BinaryFormatter bf = new BinaryFormatter();
-                Save save = new Save();
                 try
                 {
                     using (FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -55,7 +60,6 @@ public class SaveLoadManager : MonoBehaviour
 
     public static int LoadValue(Money field)
     {
-        filePath = Application.persistentDataPath + "/" + field.moneyType.ToString() + fileEnd;
         int value = 0;
         switch (SaveLoadType)
         {
@@ -65,10 +69,16 @@ public class SaveLoadManager : MonoBehaviour
                 value = PlayerPrefs.GetInt(field.moneyType.ToString());
                 break;
             case SaveLoadType.Text:
+                filePath = Application.persistentDataPath + "/" + field.moneyType.ToString() + fileJsonEnd;
+                if (File.Exists(filePath))
+                {
+                    save = JsonUtility.FromJson<Save>(File.ReadAllText(filePath));
+                    value = save.value;
+                }
                 break;
             case SaveLoadType.Binary:
+                filePath = Application.persistentDataPath + "/" + field.moneyType.ToString() + fileBinaryEnd;
                 BinaryFormatter bf = new BinaryFormatter();
-                Save save;
                 try
                 {
                     using (FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -107,3 +117,7 @@ public class Save
 {
     public int value;
 }
+// Изначально планировал сделать сохранение всех валют в один файл, но это было не удобно тем,
+// что либо прописывать в классе выше все виды вручную (неудобно),
+// либо через массив/лист/словарь (но сложность в доступе, часто приходится объявлять = обнулять)
+// как я это делал могу показать, возможно сможете подсказать как надо правильнее, но пока что только так(
