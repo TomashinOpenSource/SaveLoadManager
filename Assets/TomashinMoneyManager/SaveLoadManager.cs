@@ -19,8 +19,10 @@ public class SaveLoadManager : MonoBehaviour
     private const string fileBinaryEnd = ".save";
     private const string fileJsonEnd = ".json";
 
-    private const string WebSaveProgress = "https://<адрес>/WebSaveProgress.php";
-    private const string WebLoadProgress = "https://<адрес>/WebLoadProgress.php";
+    private const string URL_SaveLoadManagerPHP = "http://194.67.111.214/Database/SaveLoadManager.php";
+    private const string dbname = "testtaskzimad";
+    private const string table = "testtaskzimad";
+    private const int uid = 1;
 
 
     private void Start()
@@ -55,11 +57,11 @@ public class SaveLoadManager : MonoBehaviour
                 }
                 catch (Exception ioEx)
                 {
-                    Debug.Log(String.Format("Сохранение {0} завершилось: {1}", field.moneyType, ioEx.Message));
+                    Debug.Log(string.Format("Сохранение {0} завершилось: {1}", field.moneyType, ioEx.Message));
                 }
                 break;
             case SaveLoadType.Database:
-                slm.StartCoroutine(UpdateProgress(field, value));
+                slm.StartCoroutine(ConnectToServer(true, field, value));
                 break;
             default:
                 break;
@@ -102,7 +104,7 @@ public class SaveLoadManager : MonoBehaviour
                 }
                 break;
             case SaveLoadType.Database:
-                slm.StartCoroutine(LoadProgress());
+                slm.StartCoroutine(ConnectToServer(false, field));
                 break;
             default:
                 
@@ -113,64 +115,42 @@ public class SaveLoadManager : MonoBehaviour
     }
 
     #region Работа с сервером
-    private static IEnumerator LoadProgress()
+    private static IEnumerator ConnectToServer(bool type, Money field, int value = 0)
     {
+        //type: 0 - загрузка, 1 - сохранение
         WWWForm form = new WWWForm();
-        //form.AddField("platform", Bridge.platform);
-        //form.AddField("uid", UID);
+        form.AddField("dbname", dbname);
+        form.AddField("table", table);
+        form.AddField("uid", uid);
+        form.AddField("field", field.moneyType.ToString());
+        form.AddField("type", Convert.ToInt32(type));
+        form.AddField("value", value);
 
-        using (UnityWebRequest www = UnityWebRequest.Post(WebLoadProgress, form))
+        using (UnityWebRequest www = UnityWebRequest.Post(URL_SaveLoadManagerPHP, form))
         {
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                //Debug.Log(www.error);
+                Debug.Log("ERROR: " + www.error);
             }
             else
             {
-                if (www.downloadHandler.text != "")
+                if (type)
                 {
-                    SetProgress(www.downloadHandler.text);
+                    if (www.downloadHandler.text != "")
+                    {
+                        Debug.Log(www.downloadHandler.text);
+                    }
+                    else
+                    {
+                        Debug.Log("NULL");
+                    }
                 }
                 else
                 {
-                    
+                    Debug.Log(www.downloadHandler.text);
                 }
-                //yield return new WaitForSeconds(SyncTime);
-                slm.StartCoroutine(LoadProgress());
-            }
-        }
-    }
-    private static void SetProgress(string progress)
-    {
-        string[] array = progress.Split(new char[] { ';' });
-        for (int i = 0; i < array.Length; i++)
-        {
-            //Debug.LogFormat("Key {0} updated to {1}", keys[i], Convert.ToInt32(array[i]));
-            //PlayerPrefs.SetInt(keys[i], Convert.ToInt32(array[i]));
-        }
-        //PuzzleMatchManager.instance.livesSystem.CheckLives();
-    }
-    private static IEnumerator UpdateProgress(Money field, int value)
-    {
-        WWWForm form = new WWWForm();
-        //form.AddField("platform", Bridge.platform);
-        //form.AddField("uid", UID);
-        form.AddField("field", field.moneyType.ToString());
-        form.AddField("value", value);
-
-        using (UnityWebRequest www = UnityWebRequest.Post(WebSaveProgress, form))
-        {
-            yield return www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                //Debug.Log(www.error);
-            }
-            else
-            {
-                //Debug.Log(www.downloadHandler.text);
             }
         }
     }
