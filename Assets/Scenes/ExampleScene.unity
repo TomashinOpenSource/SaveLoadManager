@@ -467,7 +467,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11036ba1605eabc41ad5c2d38a7326c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SaveLoadType: 4
+  SaveLoadType: 1
   money:
   - moneyType: 0
     value: 0
