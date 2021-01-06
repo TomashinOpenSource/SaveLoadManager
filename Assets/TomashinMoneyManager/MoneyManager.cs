@@ -14,10 +14,11 @@ public class MoneyManager : MonoBehaviour
         if (!GetComponent<SaveLoadManager>()) gameObject.AddComponent<SaveLoadManager>();
         SaveLoadManager.SaveLoadType = SaveLoadType;
         SaveLoadManager.localInstance = GetComponent<SaveLoadManager>();
+        SaveLoadManager.MoneyManager = this;
 
         foreach (var item in money)
         {
-            item.Value = SaveLoadManager.LoadValue(item);
+            item.Value = SaveLoadManager.UpdateValue(UpdateType.Load ,item);
         }
     }
 
@@ -46,11 +47,12 @@ public class Money
         {
             this.value = value;
             valueField.text = moneyType.ToString() + ": " + value.ToString();
-            SaveLoadManager.SaveValue(this, value);
+            SaveLoadManager.UpdateValue(UpdateType.Save, this, value);
         }
         // Загрузка и Сохранение стоит внутри внутри свойства значения валюты для упрощения работы.
         // Данный способ надежнее по защите - изменение происходит только после загрузки актуального значения
         // Но добавляется нагрузка из-за частой работы с системой
+        // В случае с БД будет происходить сначала запись нулевого значения, а потом актуального - пока не нашел решения как исправить
     }
 }
 

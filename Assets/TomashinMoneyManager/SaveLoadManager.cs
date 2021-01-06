@@ -10,6 +10,7 @@ public class SaveLoadManager : MonoBehaviour
 {
     public static SaveLoadManager localInstance;
     public static SaveLoadManager slm { get { return localInstance; } }
+    public static MoneyManager MoneyManager;
 
     public static SaveLoadType SaveLoadType;
 
@@ -30,58 +31,24 @@ public class SaveLoadManager : MonoBehaviour
 
     }
 
-    public static void SaveValue(Money field, int value)
+    public static int UpdateValue(UpdateType type, Money field, int value = 0)
     {
         switch (SaveLoadType)
         {
             case SaveLoadType.None:
                 break;
             case SaveLoadType.PlayerPrefs:
-                PlayerPrefs.SetInt(field.moneyType.ToString(), value);
+                if (type == UpdateType.Save) PlayerPrefs.SetInt(field.moneyType.ToString(), value);
+                else value = PlayerPrefs.GetInt(field.moneyType.ToString());
                 break;
             case SaveLoadType.Text:
                 filePath = Application.persistentDataPath + "/" + field.moneyType.ToString() + fileJsonEnd;
-                save.value = value;
-                File.WriteAllText(filePath, JsonUtility.ToJson(save));
-                break;
-            case SaveLoadType.Binary:
-                filePath = Application.persistentDataPath + "/" + field.moneyType.ToString() + fileBinaryEnd;
-                BinaryFormatter bf = new BinaryFormatter();
-                try
+                if (type == UpdateType.Save)
                 {
-                    using (FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                    {
-                        save.value = value;
-                        bf.Serialize(fs, save);
-                    }
+                    save.value = value;
+                    File.WriteAllText(filePath, JsonUtility.ToJson(save));
                 }
-                catch (Exception ioEx)
-                {
-                    Debug.Log(string.Format("Сохранение {0} завершилось: {1}", field.moneyType, ioEx.Message));
-                }
-                break;
-            case SaveLoadType.Database:
-                slm.StartCoroutine(ConnectToServer(true, field, value));
-                break;
-            default:
-                break;
-        }
-        Debug.Log(string.Format("Сохранение {0} = {1}", field.moneyType, value));
-    }
-
-    public static int LoadValue(Money field)
-    {
-        int value = 0;
-        switch (SaveLoadType)
-        {
-            case SaveLoadType.None:
-                break;
-            case SaveLoadType.PlayerPrefs:
-                value = PlayerPrefs.GetInt(field.moneyType.ToString());
-                break;
-            case SaveLoadType.Text:
-                filePath = Application.persistentDataPath + "/" + field.moneyType.ToString() + fileJsonEnd;
-                if (File.Exists(filePath))
+                else if (File.Exists(filePath))
                 {
                     save = JsonUtility.FromJson<Save>(File.ReadAllText(filePath));
                     value = save.value;
@@ -94,28 +61,34 @@ public class SaveLoadManager : MonoBehaviour
                 {
                     using (FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                     {
-                        save = (Save)bf.Deserialize(fs);
-                        value = save.value;
+                        if (type == UpdateType.Save)
+                        {
+                            save.value = value;
+                            bf.Serialize(fs, save);
+                        }
+                        else
+                        {
+                            save = (Save)bf.Deserialize(fs);
+                            value = save.value;
+                        }
+
                     }
                 }
                 catch (Exception ioEx)
                 {
-                    Debug.Log(String.Format("Загрузка {0} завершилась: {1}", "0", ioEx.Message));
+                    Debug.Log(string.Format("{0} завершилось с значением {1} и ошибкой {2}", type, field.moneyType, ioEx.Message));
                 }
                 break;
             case SaveLoadType.Database:
-                slm.StartCoroutine(ConnectToServer(false, field));
+                slm.StartCoroutine(ConnectToServer(type, field, value));
                 break;
             default:
-                
                 break;
         }
-        Debug.Log(string.Format("Получение {0} = {1}", field.moneyType, value));
         return value;
     }
 
-    #region Работа с сервером
-    private static IEnumerator ConnectToServer(bool type, Money field, int value = 0)
+    private static IEnumerator ConnectToServer(UpdateType type, Money field, int value = 0)
     {
         //type: 0 - загрузка, 1 - сохранение
         WWWForm form = new WWWForm();
@@ -123,7 +96,7 @@ public class SaveLoadManager : MonoBehaviour
         form.AddField("table", table);
         form.AddField("uid", uid);
         form.AddField("field", field.moneyType.ToString());
-        form.AddField("type", Convert.ToInt32(type));
+        form.AddField("type", type.ToString());
         form.AddField("value", value);
 
         using (UnityWebRequest www = UnityWebRequest.Post(URL_SaveLoadManagerPHP, form))
@@ -136,11 +109,20 @@ public class SaveLoadManager : MonoBehaviour
             }
             else
             {
-                if (type)
+                if (type == UpdateType.Load)
                 {
                     if (www.downloadHandler.text != "")
                     {
                         Debug.Log(www.downloadHandler.text);
+                        foreach (var item in MoneyManager.money)
+                        {
+                            if (item.moneyType == field.moneyType)
+                            {
+                                value = Convert.ToInt32(www.downloadHandler.text);
+                                item.Value = value;
+                                //slm.StartCoroutine(ConnectToServer(UpdateType.Save, field, value));
+                            }
+                        }
                     }
                     else
                     {
@@ -154,7 +136,6 @@ public class SaveLoadManager : MonoBehaviour
             }
         }
     }
-    #endregion
 }
 
 public enum SaveLoadType
@@ -175,3 +156,8 @@ public class Save
 // что либо прописывать в классе выше все виды вручную (неудобно),
 // либо через массив/лист/словарь (но сложность в доступе, часто приходится объявлять = обнулять)
 // как я это делал могу показать, возможно сможете подсказать как надо правильнее, но пока что только так(
+
+public enum UpdateType
+{
+    Save, Load
+}
