@@ -13,6 +13,7 @@ public class MoneyManager : MonoBehaviour
     {
         if (!GetComponent<SaveLoadManager>()) gameObject.AddComponent<SaveLoadManager>();
         SaveLoadManager.SaveLoadType = SaveLoadType;
+        SaveLoadManager.localInstance = GetComponent<SaveLoadManager>();
 
         foreach (var item in money)
         {

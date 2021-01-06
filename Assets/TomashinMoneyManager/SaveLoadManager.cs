@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 
 public class SaveLoadManager : MonoBehaviour
 {
-    private static SaveLoadManager localInstance;
+    public static SaveLoadManager localInstance;
     public static SaveLoadManager slm { get { return localInstance; } }
 
     public static SaveLoadType SaveLoadType;
