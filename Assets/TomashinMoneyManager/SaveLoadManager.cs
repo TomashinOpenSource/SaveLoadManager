@@ -113,7 +113,7 @@ public class SaveLoadManager : MonoBehaviour
                 {
                     if (www.downloadHandler.text != "")
                     {
-                        Debug.Log(www.downloadHandler.text);
+                        //Debug.Log(www.downloadHandler.text);
                         foreach (var item in MoneyManager.money)
                         {
                             if (item.moneyType == field.moneyType)
@@ -126,12 +126,12 @@ public class SaveLoadManager : MonoBehaviour
                     }
                     else
                     {
-                        Debug.Log("NULL");
+                        //Debug.Log("NULL");
                     }
                 }
                 else
                 {
-                    Debug.Log(www.downloadHandler.text);
+                    //Debug.Log(www.downloadHandler.text);
                 }
             }
         }
