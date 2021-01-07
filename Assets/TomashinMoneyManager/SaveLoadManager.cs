@@ -8,10 +8,6 @@ using UnityEngine.Networking;
 
 public class SaveLoadManager : MonoBehaviour
 {
-    public static SaveLoadManager localInstance;
-    public static SaveLoadManager slm { get { return localInstance; } }
-    public static MoneyManager MoneyManager;
-
     public static SaveLoadType SaveLoadType;
 
     private static Save save = new Save();
@@ -25,6 +21,15 @@ public class SaveLoadManager : MonoBehaviour
     private const string table = "testtaskzimad";
     private const int uid = 1;
 
+    #region SaveLoadManager & MoneyManager
+    public static SaveLoadManager SLM;
+    public static MoneyManager MoneyManager;
+    private void Awake()
+    {
+        SLM = this;
+        MoneyManager = GetComponent<MoneyManager>();
+    }
+    #endregion
 
     private void Start()
     {
@@ -80,7 +85,7 @@ public class SaveLoadManager : MonoBehaviour
                 }
                 break;
             case SaveLoadType.Database:
-                slm.StartCoroutine(ConnectToServer(type, field, value));
+                SLM.StartCoroutine(ConnectToServer(type, field, value));
                 break;
             default:
                 break;
@@ -90,7 +95,6 @@ public class SaveLoadManager : MonoBehaviour
 
     private static IEnumerator ConnectToServer(UpdateType type, Money field, int value = 0)
     {
-        //type: 0 - загрузка, 1 - сохранение
         WWWForm form = new WWWForm();
         form.AddField("dbname", dbname);
         form.AddField("table", table);

@@ -6,27 +6,27 @@ using UnityEngine.UI;
 
 public class MoneyManager : MonoBehaviour
 {
+    #region SaveLoadManager
+    [SerializeField] private SaveLoadManager saveLoadManager;
+    public SaveLoadManager SaveLoadManager
+    {
+        get => (saveLoadManager == null) ? GetComponent<SaveLoadManager>() : saveLoadManager;
+        set => saveLoadManager = value;
+    }
+    #endregion
+
     public SaveLoadType SaveLoadType;
     public Money[] money;
 
     void Start()
     {
-        if (!GetComponent<SaveLoadManager>()) gameObject.AddComponent<SaveLoadManager>();
         SaveLoadManager.SaveLoadType = SaveLoadType;
-        SaveLoadManager.localInstance = GetComponent<SaveLoadManager>();
-        SaveLoadManager.MoneyManager = this;
 
         foreach (var item in money)
         {
             item.Value = SaveLoadManager.UpdateValue(UpdateType.Load ,item);
         }
     }
-
-    void Update()
-    {
-        
-    }
-    
 }
 
 [Serializable]
