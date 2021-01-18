@@ -156,7 +156,6 @@ public class Save
 {
     public int value;
 }
-// как я это делал могу показать, возможно сможете подсказать как надо правильнее, но пока что только так(
 public enum UpdateType
 {
     Save, Load
