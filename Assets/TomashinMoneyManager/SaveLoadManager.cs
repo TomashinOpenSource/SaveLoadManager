@@ -16,9 +16,9 @@ public class SaveLoadManager : MonoBehaviour
     private const string fileBinaryEnd = ".save";
     private const string fileJsonEnd = ".json";
 
-    private const string URL_SaveLoadManagerPHP = "http://194.67.111.214/Database/SaveLoadManager.php";
-    private const string dbname = "testtaskzimad";
-    private const string table = "testtaskzimad";
+    private const string URL_SaveLoadManagerPHP = "http://example.com/Example.php";
+    private const string dbname = "test";
+    private const string table = "test";
     private const int uid = 1;
 
     #region SaveLoadManager & MoneyManager
@@ -156,11 +156,7 @@ public class Save
 {
     public int value;
 }
-// Изначально планировал сделать сохранение всех валют в один файл, но это было не удобно тем,
-// что либо прописывать в классе выше все виды вручную (неудобно),
-// либо через массив/лист/словарь (но сложность в доступе, часто приходится объявлять = обнулять)
 // как я это делал могу показать, возможно сможете подсказать как надо правильнее, но пока что только так(
-
 public enum UpdateType
 {
     Save, Load
